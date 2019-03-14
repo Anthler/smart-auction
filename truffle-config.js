@@ -39,7 +39,7 @@ module.exports = {
       host: "localhost",
       port: 7545, // This is the conventional port. If you're using the Ganache Blockchain, change port value to the Ganache default port 7545. If you're using Truffle develop network, change port value to 9545
       network_id: "*", // Match any network id. You may need to replace * with your network Id
-      from: "0xc853b71da0bbF30a12C085e3914152ccc179638f", // Add your unlocked account within the double quotes
+      from: "0xA952e419c40503F120159a568A7d1cD4e1Fb2088", // Add your unlocked account within the double quotes
       gas: 4444444
     }
   }

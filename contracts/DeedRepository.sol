@@ -1,14 +1,15 @@
 pragma solidity >= 0.4.20 < 0.6.0;
 
-import "openzeppelin-solidity/contracts/token/ERC721/ERC721.sol";
+
 import "openzeppelin-solidity/contracts/token/ERC721/ERC721Metadata.sol";
+//import "openzeppelin-solidity/contracts/token/ERC721/ERC721.sol";
 
-contract DeedRepository is ERC721, ERC721Metadata{
+contract DeedRepository is ERC721Metadata{
 
 
 
-    string public name = "Smaution";
-    string public symbol = "SMAT";
+    string private name = "Smaution";
+    string private symbol = "SMAT";
 
     event addDeed(address _by,uint256 _tokenId);
 

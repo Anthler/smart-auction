@@ -1,17 +1,20 @@
 pragma solidity >= 0.4.20 < 0.6.0;
 
 import "contracts/DeedRepository.sol";
+import "openzeppelin-solidity/contracts/token/ERC721/ERC721.sol";
 
-contract AuctionRepository{
+contract AuctionRepository is ERC721{
+
+    string public name;
+    string public symbol;
 
     Auction[] public auctions;
 
-    mapping(uint256 => Bid[]) public auctionBids;
-    mapping(address => uint256) public auctionOwner;
+    mapping(uint => Bid[]) auctionBids;
+    mapping(address => uint[]) auctionOwner;
 
 
     struct Auction{
-
         string name;
         uint256 blockDeadline;
         uint256 startPrice;
@@ -40,6 +43,11 @@ contract AuctionRepository{
         _;
     }
 
+    constructor(string memory _name, string memory _symbol) public {
+          name = _name;
+          symbol = _symbol;
+    }
+
     function() external{
         revert();
     }
@@ -58,14 +66,14 @@ contract AuctionRepository{
         return ownedActions;
     }
 
-    function getCurrentBid(uint _auctionId) public view returns(uint256, address){
+    function getCurrentBid(uint _auctionId) public view returns(uint256, address) {
         uint bidsLength = auctionBids[_auctionId].length;
-        if(bidsLength >0){
-            Bid storage lastBid = auctionBids[_auctionId -1];
+
+        if( bidsLength > 0 ) {
+            Bid memory lastBid = auctionBids[_auctionId][bidsLength - 1];
             return (lastBid.amount, lastBid.from);
         }
-
-        return (0,0);
+       // return (0,"0");
     }
 
     function getAuctionsCountOfOwner(address _owner) public returns(uint) {
@@ -132,23 +140,24 @@ function approveAndTransfer(
         return true;
     }
 
-function cancelAuction(uint _auctionId) public isOwner(_auctionId){
-    Auction memory myAuction = auctionBids[_auctionId];
-    uint bidsLength = auctionBids[_auctionId].length;
+  function cancelAuction(uint _auctionId) public isOwner(_auctionId) {
+      Auction memory myAuction = auctions[_auctionId];
+      uint bidsLength = auctionBids[_auctionId].length;
 
-    if(bidsLength > 0){
-        Bid memory lastBid = auctionBids[_auctionId][bidsLength - 1];
-        if(!lastBid.from.send(lastBid.amount)){
-            revert();
+        // if there are bids refund the last bid
+        if( bidsLength > 0 ) {
+            Bid memory lastBid = auctionBids[_auctionId][bidsLength - 1];
+            if(!address(uint160(lastBid.from)).send(lastBid.amount)) {
+                revert();
+            }
+        }
+
+        // approve and transfer from this contract to auction owner
+        if(approveAndTransfer(address(this), myAuction.owner, myAuction.deedRepositoryAddress, myAuction.deedId)){
+            auctions[_auctionId].active = false;
+            emit AuctionCanceled(msg.sender, _auctionId);
         }
     }
-
-    if(approveAndTransfer(address(this),myAuction.owner, myAuction.deedRepositoryAddress, myAuction.deedId )){
-        auctions[_auctionId].active = false;
-        emit AuctionCanceled(msg.sender, _auctionId);
-    }
-
-}
 
 
 function finalizeAuction(uint _auctionId) public {
@@ -161,7 +170,7 @@ function finalizeAuction(uint _auctionId) public {
         cancelAuction(_auctionId);
     }else{
         Bid memory lastBid = auctionBids[_auctionId][bidsLength - 1];
-        if(!myAuction.owner.send(lastBid.amount)) {
+        if(!address(uint160(myAuction.owner)).send(lastBid.amount)) {
          revert();
 
          if(approveAndTransfer(address(this), lastBid.from, myAuction.deedRepositoryAddress, myAuction.deedId)){
@@ -193,7 +202,7 @@ function bidOnAuction(uint _auctionId) public payable{
     if(ethAmountSent < tempAmount) revert();
 
     if(bidsLength > 0){
-        if(!lastBid.from.send(lastBid.amount)){
+        if(!address(uint160(lastBid.from)).send(lastBid.amount)){
             revert();
         }
 

@@ -1,7 +1,7 @@
-var DeedRepository = require("../contracts/DeedRepository");
-var AuctionRepository = require("../contracts/AuctionRepository");
+//var DeedRepository = artifacts.require("DeedRepository");
+var AuctionRepository = artifacts.require("AuctionRepository");
 
 module.exports = function(deployer) {
-  deployer.deploy(DeedRepository);
-  deployer.deploy(AuctionRepository);
+  //deployer.deploy(DeedRepository, "Smart Act", "SMAUT");
+  deployer.deploy(AuctionRepository,"Smart Act", "SMAUT");
 };
